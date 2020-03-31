@@ -12,9 +12,11 @@ import (
 	"github.com/gocolly/colly"
 )
 
-type GoogleScraperImpl struct {
-}
+// GoogleScraperImpl is an implemenation of a scraper
+// service that will scrape google
+type GoogleScraperImpl struct{}
 
+// NewGoogleScraperService ...
 func NewGoogleScraperService() *GoogleScraperImpl {
 	return &GoogleScraperImpl{}
 }
@@ -30,6 +32,8 @@ func buildRequestURL(query, langCode string) string {
 	return fmt.Sprintf(`https://www.google.%s/search?q=%s&hl=%s`, tld, parseQuery(query), langCode)
 }
 
+// Scrape will scrape google for the given query and
+// parse the results.
 func (g *GoogleScraperImpl) Scrape(query string) []ScrapedResult {
 	c := colly.NewCollector()
 	log.Println("Scraping google for", query)
@@ -56,11 +60,9 @@ func (g *GoogleScraperImpl) Scrape(query string) []ScrapedResult {
 			}
 			text := e.ChildText("div")
 
-			scrapedResults = append(scrapedResults, ScrapedResult{
-				Title:   text,
-				Href:    link,
-				Keyword: []string{},
-			})
+			result := ScrapedResult{}
+			// TODO populate the scraped result.
+			scrapedResults = append(scrapedResults, result)
 		})
 	}
 
