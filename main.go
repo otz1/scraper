@@ -1,6 +1,9 @@
 package main
 
 import (
+	"log"
+	"net/http"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/otz1/scraper/entity"
@@ -11,22 +14,25 @@ import (
 func ScrapeHandler(c *gin.Context) {
 	var req entity.ScrapeRequest
 	if err := c.BindJSON(&req); err != nil {
-		panic(err)
+		log.Println("bad request", err)
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
 	}
 
-	selectedSource := GOOGLE
+	selectedSource := entity.GOOGLE
 	if source := req.Source; source == nil {
 		selectedSource = *source
 	}
 
 	sources := resource.ValidSearchResources()
-	source, ok := sources[source]
+	resource, ok := sources[selectedSource]
 	if !ok {
 		panic("bad source!")
 	}
 
 	// do the scrape on the given source.
-	source.Scrape(req.Query)
+	resp := resource.Query(req.Query)
+	c.JSON(http.StatusOK, resp)
 }
 
 func main() {
@@ -35,6 +41,6 @@ func main() {
 		conf := cors.Default()
 		router.Use(conf)
 	}
-	router.GET("/scrape", ScrapeHandler)
+	router.POST("/scrape", ScrapeHandler)
 	router.Run(":8001")
 }

@@ -1,11 +1,13 @@
 package resource
 
-import "github.com/otz1/scraper/entity"
+import (
+	"github.com/otz1/scraper/entity"
+)
 
 // SearchResource will handle the endpoint for
 // a given search service that can be scraped
 type SearchResource interface {
-	Query(query string)
+	Query(query string) entity.ScrapeResponse
 }
 
 // ValidSearchResources is a list of valid resources that can be used

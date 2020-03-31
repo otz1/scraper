@@ -13,6 +13,6 @@ const (
 
 // ScrapeRequest ...
 type ScrapeRequest struct {
-	Query  string
-	Source *ScrapeSource
+	Query  string        `json:"query"`
+	Source *ScrapeSource `json:"source"`
 }

@@ -32,12 +32,8 @@ func buildRequestURL(query, langCode string) string {
 	return fmt.Sprintf(`https://www.google.%s/search?q=%s&hl=%s`, tld, parseQuery(query), langCode)
 }
 
-// Scrape will scrape google for the given query and
-// parse the results.
-func (g *GoogleScraperImpl) Scrape(query string) []ScrapedResult {
+func getSearchResultSet(query string) []*colly.HTMLElement {
 	c := colly.NewCollector()
-	log.Println("Scraping google for", query)
-
 	searchElements := []*colly.HTMLElement{}
 	c.OnHTML("div", func(e *colly.HTMLElement) {
 		e.ForEach("div", func(a int, el *colly.HTMLElement) {
@@ -49,16 +45,22 @@ func (g *GoogleScraperImpl) Scrape(query string) []ScrapedResult {
 	})
 	url := buildRequestURL(query, "gb")
 	c.Visit(url)
+	return searchElements
+}
 
+func convertResults(searchElements []*colly.HTMLElement) []ScrapedResult {
 	scrapedResults := []ScrapedResult{}
 
 	for _, result := range searchElements {
+		// todo get all the other stuff out of the result
+
 		result.ForEach("a[href]", func(a int, e *colly.HTMLElement) {
 			link := e.Attr("href")
 			if !strings.HasPrefix(link, "/url?q=http") {
 				return
 			}
 			text := e.ChildText("div")
+			fmt.Println(e, text)
 
 			result := ScrapedResult{}
 			// TODO populate the scraped result.
@@ -67,6 +69,15 @@ func (g *GoogleScraperImpl) Scrape(query string) []ScrapedResult {
 	}
 
 	return scrapedResults
+}
+
+// Scrape will scrape google for the given query and
+// parse the results.
+func (g *GoogleScraperImpl) Scrape(query string) []ScrapedResult {
+	log.Println("Scraping google for", query)
+	resultSet := getSearchResultSet(query)
+	convertedResults := convertResults(resultSet)
+	return convertedResults
 }
 
 func getPageContents(query, langCode string) string {

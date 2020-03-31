@@ -6,7 +6,7 @@ import "log"
 // the services available. it will handle
 // query parsing too
 func ScrapeFor(query string) {
-	scrapers := []ScraperService{
+	scrapers := []Service{
 		NewGoogleScraperService(),
 	}
 
