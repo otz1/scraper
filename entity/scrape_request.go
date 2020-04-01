@@ -8,7 +8,8 @@ type ScrapeSource string
 // that are currently supported
 const (
 	GOOGLE    ScrapeSource = "GOOGLE"
-	WIKIPEDIA              = "WIKIPEDIA"
+	DDG       ScrapeSource = "DDG"
+	WIKIPEDIA ScrapeSource = "WIKIPEDIA"
 )
 
 // ScrapeRequest ...

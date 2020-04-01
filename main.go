@@ -19,7 +19,7 @@ func ScrapeHandler(c *gin.Context) {
 		return
 	}
 
-	selectedSource := entity.GOOGLE
+	selectedSource := entity.DDG
 	if source := req.Source; source == nil {
 		selectedSource = *source
 	}

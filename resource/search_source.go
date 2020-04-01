@@ -15,5 +15,6 @@ type SearchResource interface {
 func ValidSearchResources() map[entity.ScrapeSource]SearchResource {
 	return map[entity.ScrapeSource]SearchResource{
 		entity.GOOGLE: NewGoogleSearchResource(),
+		entity.DDG: NewDDGSearchResource(),
 	}
 }
