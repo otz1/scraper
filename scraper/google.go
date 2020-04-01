@@ -7,12 +7,13 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/gocolly/colly"
 )
 
-// GoogleScraperImpl is an implemenation of a scraper
+// GoogleScraperImpl is an impl. of a scraper
 // service that will scrape google
 type GoogleScraperImpl struct{}
 
@@ -21,7 +22,7 @@ func NewGoogleScraperService() *GoogleScraperImpl {
 	return &GoogleScraperImpl{}
 }
 
-func buildRequestURL(query, langCode string) string {
+func (g *GoogleScraperImpl) buildRequestURL(query, langCode string) string {
 	tld := map[string]string{
 		"us": "com",
 		"gb": "co.uk",
@@ -32,38 +33,60 @@ func buildRequestURL(query, langCode string) string {
 	return fmt.Sprintf(`https://www.google.%s/search?q=%s&hl=%s`, tld, parseQuery(query), langCode)
 }
 
-func getSearchResultSet(query string) []*colly.HTMLElement {
+func (g *GoogleScraperImpl) getSearchResultSet(query string) []*colly.HTMLElement {
+	log.Println("getSearchResultSet for", query)
+
 	c := colly.NewCollector()
-	searchElements := []*colly.HTMLElement{}
+	var searchElements []*colly.HTMLElement
 	c.OnHTML("div", func(e *colly.HTMLElement) {
-		e.ForEach("div", func(a int, el *colly.HTMLElement) {
-			classList := strings.Split(el.Attr("class"), " ")
-			if len(classList) == 4 {
-				searchElements = append(searchElements, el)
-			}
+
+		e.ForEach("#search", func(count int, e *colly.HTMLElement) {
+			log.Println(e)
 		})
+
+		// searchElements = append(searchElements, e)
 	})
-	url := buildRequestURL(query, "gb")
-	c.Visit(url)
+	url := g.buildRequestURL(query, "gb")
+	if err := c.Visit(url); err != nil {
+		panic(err)
+	}
 	return searchElements
 }
 
-func convertResults(searchElements []*colly.HTMLElement) []ScrapedResult {
-	scrapedResults := []ScrapedResult{}
+func (g *GoogleScraperImpl) convertResults(searchElements []*colly.HTMLElement) []ScrapedResult {
+	var scrapedResults []ScrapedResult
 
 	for _, result := range searchElements {
-		// todo get all the other stuff out of the result
+		fmt.Println("result is", result.DOM.Closest("a[href]").Text())
 
 		result.ForEach("a[href]", func(a int, e *colly.HTMLElement) {
 			link := e.Attr("href")
+
+			// its not a url that we care about
 			if !strings.HasPrefix(link, "/url?q=http") {
 				return
 			}
-			text := e.ChildText("div")
-			fmt.Println(e, text)
 
-			result := ScrapedResult{}
-			// TODO populate the scraped result.
+			// trim the prefix
+			link = strings.TrimPrefix(link, "/url?q=")
+
+			titles := e.ChildTexts("h3")
+			title := "no title!"
+			if len(titles) > 0 {
+				title = titles[0]
+			}
+
+			// ensure it's a proper link!
+			if _, err := url.Parse(link); err != nil {
+				log.Println("failed to parse url", err)
+				return
+			}
+
+			log.Println(title, "->", link)
+
+			result := ScrapedResult{
+				Href: link,
+			}
 			scrapedResults = append(scrapedResults, result)
 		})
 	}
@@ -75,13 +98,13 @@ func convertResults(searchElements []*colly.HTMLElement) []ScrapedResult {
 // parse the results.
 func (g *GoogleScraperImpl) Scrape(query string) []ScrapedResult {
 	log.Println("Scraping google for", query)
-	resultSet := getSearchResultSet(query)
-	convertedResults := convertResults(resultSet)
+	resultSet := g.getSearchResultSet(query)
+	convertedResults := g.convertResults(resultSet)
 	return convertedResults
 }
 
-func getPageContents(query, langCode string) string {
-	url := buildRequestURL(query, langCode)
+func (g *GoogleScraperImpl) getPageContents(query, langCode string) string {
+	url := g.buildRequestURL(query, langCode)
 	resp, err := http.Get(url)
 	if err != nil {
 		panic(err)

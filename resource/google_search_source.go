@@ -1,8 +1,6 @@
 package resource
 
 import (
-	"fmt"
-
 	"github.com/otz1/scraper/entity"
 	"github.com/otz1/scraper/scraper"
 )
@@ -19,11 +17,19 @@ func NewGoogleSearchResource() *GoogleSearchResource {
 // Query ...
 func (gss *GoogleSearchResource) Query(query string) entity.ScrapeResponse {
 	gscraper := scraper.NewGoogleScraperService()
-	results := gscraper.Scrape(query)
-	fmt.Println("results are ", results)
+	scrapedResults := gscraper.Scrape(query)
 
-	// todo store results in response and convert where necessary
+	convertedResults := func() []entity.Result {
+		var results []entity.Result
+		for _, sr := range scrapedResults {
+			result := entity.ToResult(sr)
+			results = append(results, result)
+		}
+		return results
+	}()
+
 	return entity.ScrapeResponse{
 		OriginalQuery: query,
+		Results: convertedResults,
 	}
 }
