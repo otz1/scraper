@@ -53,6 +53,7 @@ func (d *DuckDuckGoScraperImpl) getSearchResultSet(query string) []ScrapedResult
 		e.DOM.Find(".result").Each(func(_ int, s *goquery.Selection) {
 			body := s.Find(".result__body")
 			title := body.Find(".result__title a").Text()
+			snippet := body.Find(".result__snippet").Text()
 
 			link, ok := body.Find(".result__title .result__a").Attr("href")
 			if !ok {
@@ -71,6 +72,7 @@ func (d *DuckDuckGoScraperImpl) getSearchResultSet(query string) []ScrapedResult
 			results = append(results, ScrapedResult{
 				Title: title,
 				Href: convertedLink,
+				Snippet: snippet,
 			})
 		})
 	})
