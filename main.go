@@ -20,7 +20,7 @@ func ScrapeHandler(c *gin.Context) {
 	}
 
 	selectedSource := entity.DDG
-	if source := req.Source; source == nil {
+	if source := req.Source; source != nil {
 		selectedSource = *source
 	}
 
