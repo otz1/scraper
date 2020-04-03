@@ -5,14 +5,32 @@ package scraper
 import (
 	"fmt"
 	"github.com/getsentry/sentry-go"
-	"io/ioutil"
+	"github.com/otz1/scraper/entity"
+	"github.com/otz1/scraper/util"
 	"log"
-	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/gocolly/colly"
 )
+
+// TODO migrate over to using sitecode.
+
+var siteCodeMap = map[entity.SiteCode]string{
+	entity.OTZIT_US: "com",
+	entity.OTZIT_UK: "co.uk",
+	entity.OTZIT_FR: "fr",
+}
+
+func (g GoogleScraperImpl) getTLD(siteCode entity.SiteCode) string {
+	tld, ok := siteCodeMap[siteCode]
+	if !ok {
+		err := util.InvalidSiteCodeErr(siteCode)
+		sentry.CaptureException(err)
+		panic(err)
+	}
+	return tld
+}
 
 // GoogleScraperImpl is an impl. of a scraper
 // service that will scrape google
@@ -23,18 +41,12 @@ func NewGoogleScraperService() *GoogleScraperImpl {
 	return &GoogleScraperImpl{}
 }
 
-func (g *GoogleScraperImpl) buildRequestURL(query, langCode string) string {
-	tld := map[string]string{
-		"us": "com",
-		"gb": "co.uk",
-		"ru": "ru",
-		"fr": "fr",
-	}[langCode]
-
-	return fmt.Sprintf(`https://www.google.%s/search?q=%s&hl=%s`, tld, parseQuery(query), langCode)
+func (g *GoogleScraperImpl) buildRequestURL(query string, siteCode entity.SiteCode) string {
+	tld := g.getTLD(siteCode)
+	return fmt.Sprintf(`https://www.google.%s/search?q=%s&hl=%s`, tld, parseQuery(query), tld)
 }
 
-func (g *GoogleScraperImpl) getSearchResultSet(query string) []*colly.HTMLElement {
+func (g *GoogleScraperImpl) getSearchResultSet(query string, siteCode entity.SiteCode) []*colly.HTMLElement {
 	log.Println("getSearchResultSet for", query)
 
 	c := colly.NewCollector()
@@ -47,7 +59,7 @@ func (g *GoogleScraperImpl) getSearchResultSet(query string) []*colly.HTMLElemen
 
 		// searchElements = append(searchElements, e)
 	})
-	url := g.buildRequestURL(query, "gb")
+	url := g.buildRequestURL(query, siteCode)
 	if err := c.Visit(url); err != nil {
 		sentry.CaptureException(err)
 		panic(err)
@@ -98,24 +110,9 @@ func (g *GoogleScraperImpl) convertResults(searchElements []*colly.HTMLElement) 
 
 // Scrape will scrape google for the given query and
 // parse the results.
-func (g *GoogleScraperImpl) Scrape(query string) []ScrapedResult {
+func (g *GoogleScraperImpl) Scrape(query string, siteCode entity.SiteCode) []ScrapedResult {
 	log.Println("Scraping google for", query)
-	resultSet := g.getSearchResultSet(query)
+	resultSet := g.getSearchResultSet(query, siteCode)
 	convertedResults := g.convertResults(resultSet)
 	return convertedResults
-}
-
-func (g *GoogleScraperImpl) getPageContents(query, langCode string) string {
-	url := g.buildRequestURL(query, langCode)
-	resp, err := http.Get(url)
-	if err != nil {
-		sentry.CaptureException(err)
-		panic(err)
-	}
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		sentry.CaptureException(err)
-		panic(err)
-	}
-	return string(data)
 }

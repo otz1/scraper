@@ -15,14 +15,14 @@ func NewGoogleSearchResource() *GoogleSearchResource {
 }
 
 // Query ...
-func (gss *GoogleSearchResource) Query(query string) entity.ScrapeResponse {
+func (gss *GoogleSearchResource) Query(query string, siteCode entity.SiteCode) entity.ScrapeResponse {
 	gscraper := scraper.NewGoogleScraperService()
-	scrapedResults := gscraper.Scrape(query)
+	scrapedResults := gscraper.Scrape(query, siteCode)
 
 	convertedResults := func() []entity.Result {
 		var results []entity.Result
 		for _, sr := range scrapedResults {
-			result := entity.ToResult(sr)
+			result := sr.ToResult()
 			results = append(results, result)
 		}
 		return results

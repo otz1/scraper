@@ -5,12 +5,27 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/getsentry/sentry-go"
 	"github.com/gocolly/colly"
-	"io/ioutil"
+	"github.com/otz1/scraper/entity"
+	"github.com/otz1/scraper/util"
 	"log"
-	"net/http"
 	"net/url"
 	"strings"
 )
+
+var siteEnumMap = map[entity.SiteCode]string {
+	entity.OTZIT_US: "com",
+	entity.OTZIT_UK: "co.uk",
+}
+
+func getTLD(siteCode entity.SiteCode) string {
+	tld, ok := siteEnumMap[siteCode]
+	if !ok {
+		err := util.InvalidSiteCodeErr(siteCode)
+		sentry.CaptureException(err)
+		panic(err)
+	}
+	return tld
+}
 
 // DuckDuckGoScraperImpl is an implementation a scraper
 // service that will scrape duckduckgo
@@ -21,12 +36,8 @@ func NewDDGScraperService() *DuckDuckGoScraperImpl {
 	return &DuckDuckGoScraperImpl{}
 }
 
-func (d *DuckDuckGoScraperImpl) buildRequestURL(query, langCode string) string {
-	tld := map[string]string{
-		"us": "com",
-		"gb": "co.uk",
-	}[langCode]
-
+func (d *DuckDuckGoScraperImpl) buildRequestURL(query string, siteCode entity.SiteCode) string {
+	tld := getTLD(siteCode)
 	return fmt.Sprintf(`https://duckduckgo.%s/html/?q=%s`, tld, parseQuery(query))
 }
 
@@ -43,7 +54,7 @@ func (d *DuckDuckGoScraperImpl) convertLink(link string) (string, bool) {
 	return decodedLink[idx:], true
 }
 
-func (d *DuckDuckGoScraperImpl) getSearchResultSet(query string) []ScrapedResult {
+func (d *DuckDuckGoScraperImpl) getSearchResultSet(query string, siteCode entity.SiteCode) []ScrapedResult {
 	log.Println("getSearchResultSet for", query)
 
 	c := colly.NewCollector()
@@ -78,7 +89,7 @@ func (d *DuckDuckGoScraperImpl) getSearchResultSet(query string) []ScrapedResult
 		})
 	})
 
-	url := d.buildRequestURL(query, "gb")
+	url := d.buildRequestURL(query, siteCode)
 	if err := c.Visit(url); err != nil {
 		sentry.CaptureException(err)
 		panic(err)
@@ -89,23 +100,8 @@ func (d *DuckDuckGoScraperImpl) getSearchResultSet(query string) []ScrapedResult
 
 // Scrape will scrape google for the given query and
 // parse the results.
-func (d *DuckDuckGoScraperImpl) Scrape(query string) []ScrapedResult {
+func (d *DuckDuckGoScraperImpl) Scrape(query string, siteCode entity.SiteCode) []ScrapedResult {
 	log.Println("Scraping ddg for", query)
-	convertedResults := d.getSearchResultSet(query)
+	convertedResults := d.getSearchResultSet(query, siteCode)
 	return convertedResults
-}
-
-func (d *DuckDuckGoScraperImpl) getPageContents(query, langCode string) string {
-	url := d.buildRequestURL(query, langCode)
-	resp, err := http.Get(url)
-	if err != nil {
-		sentry.CaptureException(err)
-		panic(err)
-	}
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		sentry.CaptureException(err)
-		panic(err)
-	}
-	return string(data)
 }

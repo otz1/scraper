@@ -1,6 +1,7 @@
 package scraper
 
 import (
+	"github.com/otz1/scraper/entity"
 	"log"
 	"net/url"
 	"strings"
@@ -17,6 +18,14 @@ type ScrapedResult struct {
 	Href            string `json:"href"`
 }
 
+func (sr ScrapedResult) ToResult() entity.Result {
+	return entity.Result{
+		Title: sr.Title,
+		Href: sr.Href,
+		Snippet: sr.Snippet,
+	}
+}
+
 func attrsToMap(attrs string) map[string]bool {
 	result := map[string]bool{}
 	for _, a := range strings.Split(attrs, " ") {
@@ -25,6 +34,7 @@ func attrsToMap(attrs string) map[string]bool {
 	return result
 }
 
+// FIXME dead code?
 func elHasClass(attribs string, class string) bool {
 	classes := attrsToMap(attribs)
 	log.Println("is", class, "inside of", classes)
@@ -35,8 +45,8 @@ func elHasClass(attribs string, class string) bool {
 // Service is a service that scrapes
 // for the given query from a particular source
 type Service interface {
-	Scrape(query string) []ScrapedResult
-	buildRequestURL(query, langCode string) string
+	Scrape(query string, siteCode entity.SiteCode) []ScrapedResult
+	buildRequestURL(query string, siteCode entity.SiteCode) string
 }
 
 func parseQuery(query string) string {

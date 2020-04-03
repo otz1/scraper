@@ -1,22 +1,12 @@
 package entity
 
-import "github.com/otz1/scraper/scraper"
-
 type Result struct {
-	Title string
-	Href string
-	Snippet string
-}
-
-func ToResult(sr scraper.ScrapedResult) Result {
-	return Result{
-		Title: sr.Title,
-		Href: sr.Href,
-		Snippet: sr.Snippet,
-	}
+	Title string `json:"title"`
+	Href string`json:"href"`
+	Snippet string`json:"snippet"`
 }
 
 type ScrapeResponse struct {
-	OriginalQuery string
-	Results []Result
+	OriginalQuery string `json:"originalQuery"`
+	Results []Result `json:"results"`
 }

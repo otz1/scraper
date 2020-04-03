@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/getsentry/sentry-go"
+	"github.com/otz1/scraper/util"
 	"log"
 	"net/http"
 	"time"
@@ -21,6 +22,8 @@ func ScrapeHandler(c *gin.Context) {
 		return
 	}
 
+	siteCode := util.GetSiteCode(c.GetHeader("SITE-CODE"))
+
 	selectedSource := entity.DDG
 	if source := req.Source; source != nil {
 		selectedSource = *source
@@ -33,7 +36,7 @@ func ScrapeHandler(c *gin.Context) {
 	}
 
 	// do the scrape on the given source.
-	resp := resource.Query(req.Query)
+	resp := resource.Query(req.Query, siteCode)
 	c.JSON(http.StatusOK, resp)
 }
 

@@ -15,14 +15,14 @@ func NewWikipediaSearchResource() *WikipediaSearchResource {
 }
 
 // Query ...
-func (wsr *WikipediaSearchResource) Query(query string) entity.ScrapeResponse {
+func (wsr *WikipediaSearchResource) Query(query string, siteCode entity.SiteCode) entity.ScrapeResponse {
 	wscraper := scraper.NewWikipediaScraperService()
-	scrapedResults := wscraper.Scrape(query)
+	scrapedResults := wscraper.Scrape(query, siteCode)
 
 	convertedResults := func() []entity.Result {
 		var results []entity.Result
 		for _, sr := range scrapedResults {
-			result := entity.ToResult(sr)
+			result := sr.ToResult()
 			results = append(results, result)
 		}
 		return results

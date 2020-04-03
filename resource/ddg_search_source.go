@@ -15,14 +15,14 @@ func NewDDGSearchResource() *DDGSearchResource {
 }
 
 // Query ...
-func (ddg *DDGSearchResource) Query(query string) entity.ScrapeResponse {
+func (ddg *DDGSearchResource) Query(query string, siteCode entity.SiteCode) entity.ScrapeResponse {
 	ddgscraper := scraper.NewDDGScraperService()
-	scrapedResults := ddgscraper.Scrape(query)
+	scrapedResults := ddgscraper.Scrape(query, siteCode)
 
 	convertedResults := func() []entity.Result {
 		var results []entity.Result
 		for _, sr := range scrapedResults {
-			result := entity.ToResult(sr)
+			result := sr.ToResult()
 			results = append(results, result)
 		}
 		return results

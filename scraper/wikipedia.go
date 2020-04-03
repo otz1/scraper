@@ -5,12 +5,27 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/getsentry/sentry-go"
 	"github.com/gocolly/colly"
-	"io/ioutil"
+	"github.com/otz1/scraper/entity"
+	"github.com/otz1/scraper/util"
 	"log"
-	"net/http"
 	"net/url"
 	"strings"
 )
+
+var subDomainMap = map[entity.SiteCode]string{
+	entity.OTZIT_UK: "en",
+	entity.OTZIT_US: "en",
+}
+
+func getSubdomain(siteCode entity.SiteCode) string {
+	subDomain, ok := subDomainMap[siteCode]
+	if !ok {
+		err := util.InvalidSiteCodeErr(siteCode)
+		sentry.CaptureException(err)
+		panic(err)
+	}
+	return subDomain
+}
 
 // WikipediaScraperImpl is an implementation a scraper
 // service that will scrape wikipedia
@@ -21,18 +36,13 @@ func NewWikipediaScraperService() *WikipediaScraperImpl {
 	return &WikipediaScraperImpl{}
 }
 
-func (w *WikipediaScraperImpl) getBaseLink(subdomain string) string {
+func (w *WikipediaScraperImpl) getBaseLink(siteCode entity.SiteCode) string {
+	subdomain := getSubdomain(siteCode)
 	return fmt.Sprintf("https://%s.wikipedia.org", subdomain)
 }
 
-func (w *WikipediaScraperImpl) buildRequestURL(query, langCode string) string {
-	// TODO get a few other sources
-	subdomain := map[string]string{
-		"us": "en",
-		"gb": "en",
-	}[langCode]
-
-	baseLink := w.getBaseLink(subdomain)
+func (w *WikipediaScraperImpl) buildRequestURL(query string, siteCode entity.SiteCode) string {
+	baseLink := w.getBaseLink(siteCode)
 	return fmt.Sprintf(`%s/wiki/index.php?search=/html/?q=%s&profile=default&fulltext=1&ns0=1`, baseLink, parseQuery(query))
 }
 
@@ -49,7 +59,7 @@ func (w *WikipediaScraperImpl) convertLink(link string) (string, bool) {
 	return decodedLink[idx:], true
 }
 
-func (w *WikipediaScraperImpl) getSearchResultSet(query string) []ScrapedResult {
+func (w *WikipediaScraperImpl) getSearchResultSet(query string, siteCode entity.SiteCode) []ScrapedResult {
 	log.Println("getSearchResultSet for", query)
 
 	c := colly.NewCollector()
@@ -67,7 +77,7 @@ func (w *WikipediaScraperImpl) getSearchResultSet(query string) []ScrapedResult 
 				return
 			}
 
-			link := w.articleLinkToAbsLink(pageLink)
+			link := w.articleLinkToAbsLink(pageLink, siteCode)
 
 			convertedLink, ok := w.convertLink(link)
 			if !ok {
@@ -85,7 +95,7 @@ func (w *WikipediaScraperImpl) getSearchResultSet(query string) []ScrapedResult 
 		})
 	})
 
-	url := w.buildRequestURL(query, "gb")
+	url := w.buildRequestURL(query, siteCode)
 	if err := c.Visit(url); err != nil {
 		sentry.CaptureException(err)
 		panic(err)
@@ -96,29 +106,13 @@ func (w *WikipediaScraperImpl) getSearchResultSet(query string) []ScrapedResult 
 
 // Scrape will scrape google for the given query and
 // parse the results.
-func (w *WikipediaScraperImpl) Scrape(query string) []ScrapedResult {
+func (w *WikipediaScraperImpl) Scrape(query string, siteCode entity.SiteCode) []ScrapedResult {
 	log.Println("Scraping wikipedia for", query)
-	convertedResults := w.getSearchResultSet(query)
+	convertedResults := w.getSearchResultSet(query, siteCode)
 	return convertedResults
 }
 
-func (w *WikipediaScraperImpl) getPageContents(query, langCode string) string {
-	url := w.buildRequestURL(query, langCode)
-	resp, err := http.Get(url)
-	if err != nil {
-		sentry.CaptureException(err)
-		panic(err)
-	}
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		sentry.CaptureException(err)
-		panic(err)
-	}
-	return string(data)
-}
-
-func (w *WikipediaScraperImpl) articleLinkToAbsLink(link string) string {
-	/// TODO dont hardcode this.
-	baseLink := w.getBaseLink("en")
+func (w *WikipediaScraperImpl) articleLinkToAbsLink(link string, siteCode entity.SiteCode) string {
+	baseLink := w.getBaseLink(siteCode)
 	return baseLink + link
 }
