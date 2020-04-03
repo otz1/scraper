@@ -3,6 +3,7 @@ package scraper
 import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/getsentry/sentry-go"
 	"github.com/gocolly/colly"
 	"io/ioutil"
 	"log"
@@ -86,6 +87,7 @@ func (w *WikipediaScraperImpl) getSearchResultSet(query string) []ScrapedResult 
 
 	url := w.buildRequestURL(query, "gb")
 	if err := c.Visit(url); err != nil {
+		sentry.CaptureException(err)
 		panic(err)
 	}
 
@@ -104,10 +106,12 @@ func (w *WikipediaScraperImpl) getPageContents(query, langCode string) string {
 	url := w.buildRequestURL(query, langCode)
 	resp, err := http.Get(url)
 	if err != nil {
+		sentry.CaptureException(err)
 		panic(err)
 	}
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		sentry.CaptureException(err)
 		panic(err)
 	}
 	return string(data)

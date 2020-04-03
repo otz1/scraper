@@ -1,8 +1,10 @@
 package main
 
 import (
+	"github.com/getsentry/sentry-go"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -36,6 +38,15 @@ func ScrapeHandler(c *gin.Context) {
 }
 
 func main() {
+	err := sentry.Init(sentry.ClientOptions{
+		Dsn: "https://076afa24ea2b4cdd904ff677b5f92f62@sentry.io/5187016",
+	})
+	if err != nil {
+		log.Fatalf("sentry.Init: %s", err)
+	}
+	// Flush buffered events before the program terminates.
+	defer sentry.Flush(2 * time.Second)
+
 	router := gin.Default()
 	{
 		conf := cors.Default()

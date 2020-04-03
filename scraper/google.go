@@ -4,6 +4,7 @@ package scraper
 
 import (
 	"fmt"
+	"github.com/getsentry/sentry-go"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -48,6 +49,7 @@ func (g *GoogleScraperImpl) getSearchResultSet(query string) []*colly.HTMLElemen
 	})
 	url := g.buildRequestURL(query, "gb")
 	if err := c.Visit(url); err != nil {
+		sentry.CaptureException(err)
 		panic(err)
 	}
 	return searchElements
@@ -107,10 +109,12 @@ func (g *GoogleScraperImpl) getPageContents(query, langCode string) string {
 	url := g.buildRequestURL(query, langCode)
 	resp, err := http.Get(url)
 	if err != nil {
+		sentry.CaptureException(err)
 		panic(err)
 	}
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		sentry.CaptureException(err)
 		panic(err)
 	}
 	return string(data)
