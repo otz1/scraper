@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/getsentry/sentry-go"
+	"github.com/otz1/scraper/scrapecache"
 	"github.com/otz1/scraper/util"
 	"log"
 	"net/http"
@@ -10,8 +11,11 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/otz1/scraper/entity"
-	"github.com/otz1/scraper/resource"
 )
+
+// we cache the entire response for a minute.
+// in the future we could just cache results. for now this works.
+var cachedScraper = scrapecache.New()
 
 // TODO move this somewhere else.
 func ScrapeHandler(c *gin.Context) {
@@ -29,14 +33,7 @@ func ScrapeHandler(c *gin.Context) {
 		selectedSource = *source
 	}
 
-	sources := resource.ValidSearchResources()
-	resource, ok := sources[selectedSource]
-	if !ok {
-		panic("bad source!")
-	}
-
-	// do the scrape on the given source.
-	resp := resource.Query(req.Query, siteCode)
+	resp := cachedScraper.Query(siteCode, selectedSource, req.Query)
 	c.JSON(http.StatusOK, resp)
 }
 
