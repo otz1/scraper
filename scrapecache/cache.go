@@ -77,7 +77,7 @@ func (c *ScrapeCache) Query(siteCode entity.SiteCode, selectedSource entity.Scra
 
 func New() *ScrapeCache {
 	return &ScrapeCache{
-		store: cache.New(60*time.Second, 5*time.Minute),
+		store: cache.New(5*time.Minute, 10*time.Minute),
 		caches: 0,
 		misses: 0,
 		failures: 0,
