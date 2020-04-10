@@ -2,18 +2,18 @@ package scrapecache
 
 import (
 	"fmt"
+	"github.com/allegro/bigcache"
 	"github.com/getsentry/sentry-go"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/otz1/scraper/entity"
 	"github.com/otz1/scraper/resource"
-	"github.com/patrickmn/go-cache"
 	"time"
 )
 
 // ScrapeCache is a shim over the scraping resources
 // which will cache the responses over a short period of time.
 type ScrapeCache struct {
-	store *cache.Cache
+	store *bigcache.BigCache
 	caches uint64
 	hits uint64
 	misses uint64
@@ -27,15 +27,16 @@ func hash(siteCode entity.SiteCode, selectedSource entity.ScrapeSource, query st
 func (c *ScrapeCache) Query(siteCode entity.SiteCode, selectedSource entity.ScrapeSource, query string) entity.ScrapeResponse {
 	key := hash(siteCode, selectedSource, query)
 
-	rawCachedResp, found := c.store.Get(key)
-	if !found {
+	rawCachedResp, err := c.store.Get(key)
+	if err != nil {
 		c.misses++
+		sentry.CaptureException(err)
 	}
 
-	if found {
+	if err == nil {
 		// we've found it, let's unmarshal
 		var cachedResp entity.ScrapeResponse
-		err := jsoniter.Unmarshal([]byte(rawCachedResp.(string)), &cachedResp)
+		err := jsoniter.Unmarshal(rawCachedResp, &cachedResp)
 		if err == nil {
 			c.hits++
 			return cachedResp
@@ -68,7 +69,7 @@ func (c *ScrapeCache) Query(siteCode entity.SiteCode, selectedSource entity.Scra
 			sentry.CaptureException(err)
 		}
 		c.caches++
-		c.store.Set(key, string(respJSON), cache.DefaultExpiration)
+		c.store.Set(key, respJSON)
 	}
 
 	return resp
@@ -76,8 +77,9 @@ func (c *ScrapeCache) Query(siteCode entity.SiteCode, selectedSource entity.Scra
 
 
 func New() *ScrapeCache {
+	store, _ := bigcache.NewBigCache(bigcache.DefaultConfig(5 * time.Minute))
 	return &ScrapeCache{
-		store: cache.New(5*time.Minute, 10*time.Minute),
+		store: store,
 		caches: 0,
 		misses: 0,
 		failures: 0,
