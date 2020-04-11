@@ -16,6 +16,5 @@ const (
 
 // ScrapeRequest ...
 type ScrapeRequest struct {
-	Query  string        `json:"query"`
-	Source *ScrapeSource `json:"source"`
+	Query string `json:"query"`
 }

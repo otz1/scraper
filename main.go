@@ -27,13 +27,7 @@ func ScrapeHandler(c *gin.Context) {
 	}
 
 	siteCode := util.GetSiteCode(c.GetHeader("SITE-CODE"))
-
-	selectedSource := entity.DDG
-	if source := req.Source; source != nil {
-		selectedSource = *source
-	}
-
-	resp := cachedScraper.Query(siteCode, selectedSource, req.Query)
+	resp := cachedScraper.Query(siteCode, req.Query)
 	c.JSON(http.StatusOK, resp)
 }
 
