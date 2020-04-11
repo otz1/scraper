@@ -6,7 +6,7 @@ import (
 	"github.com/otz1/scraper/util"
 	"log"
 	"net/http"
-	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -33,9 +33,12 @@ func ScrapeHandler(c *gin.Context) {
 }
 
 func main() {
+	env := util.GetEnv("ENVIRONMENT", "local")
+	log.Println("RUNNING IN", strings.ToUpper(env))
+
 	err := sentry.Init(sentry.ClientOptions{
 		Dsn:         "https://076afa24ea2b4cdd904ff677b5f92f62@sentry.io/5187016",
-		Environment: os.Getenv("ENVIRONMENT"),
+		Environment: env,
 	})
 	if err != nil {
 		log.Fatalf("sentry.Init: %s", err)
