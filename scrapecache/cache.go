@@ -32,7 +32,7 @@ func (c *ScrapeCache) Query(siteCode entity.SiteCode, selectedSource entity.Scra
 	rawCachedResp, err := c.store.Get(key)
 	if err != nil {
 		c.misses++
-		sentry.CaptureException(err)
+		sentry.CaptureException(fmt.Errorf("couldn't find cache entry '%s', %v", key, err))
 	} else {
 		// we've found it, let's unmarshal
 		var cachedResp entity.ScrapeResponse
