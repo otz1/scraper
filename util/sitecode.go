@@ -3,7 +3,6 @@ package util
 import (
 	"github.com/getsentry/sentry-go"
 	"github.com/otz1/scraper/entity"
-	"log"
 )
 
 var siteCodeMap = map[string]entity.SiteCode {
@@ -15,13 +14,12 @@ var siteCodeMap = map[string]entity.SiteCode {
 }
 
 func GetSiteCode(siteCodeHeader string) (entity.SiteCode) {
-	log.Println("Parsing siteCode", siteCodeHeader)
-
 	siteCode, ok := siteCodeMap[siteCodeHeader]
 	if !ok {
 		err := InvalidSiteCodeHeaderErr(siteCodeHeader)
 		sentry.CaptureException(err)
-		panic(err)
+		// default to US to recover.
+		return entity.OTZIT_US
 	}
 	return siteCode
 }

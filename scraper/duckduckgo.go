@@ -55,8 +55,6 @@ func (d *DuckDuckGoScraperImpl) convertLink(link string) (string, bool) {
 }
 
 func (d *DuckDuckGoScraperImpl) getSearchResultSet(query string, siteCode entity.SiteCode) []ScrapedResult {
-	log.Println("getSearchResultSet for", query)
-
 	c := colly.NewCollector()
 	var results []ScrapedResult
 
@@ -69,17 +67,15 @@ func (d *DuckDuckGoScraperImpl) getSearchResultSet(query string, siteCode entity
 
 			link, ok := body.Find(".result__title .result__a").Attr("href")
 			if !ok {
-				log.Println("failed to get URL for result", title)
+				sentry.CaptureException(fmt.Errorf("failed to get URL for result '%s'", title))
 				return
 			}
 
 			convertedLink, ok := d.convertLink(link)
 			if !ok {
-				log.Println("failed to convert URL for result", title)
+				sentry.CaptureException(fmt.Errorf("failed to convert URL for result '%s'", title))
 				return
 			}
-
-			log.Println(convertedLink, "->", title)
 
 			results = append(results, ScrapedResult{
 				Title: title,
@@ -101,7 +97,6 @@ func (d *DuckDuckGoScraperImpl) getSearchResultSet(query string, siteCode entity
 // Scrape will scrape google for the given query and
 // parse the results.
 func (d *DuckDuckGoScraperImpl) Scrape(query string, siteCode entity.SiteCode) []ScrapedResult {
-	log.Println("Scraping ddg for", query)
 	convertedResults := d.getSearchResultSet(query, siteCode)
 	return convertedResults
 }

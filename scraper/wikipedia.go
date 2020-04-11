@@ -60,8 +60,6 @@ func (w *WikipediaScraperImpl) convertLink(link string) (string, bool) {
 }
 
 func (w *WikipediaScraperImpl) getSearchResultSet(query string, siteCode entity.SiteCode) []ScrapedResult {
-	log.Println("getSearchResultSet for", query)
-
 	c := colly.NewCollector()
 	var results []ScrapedResult
 
@@ -73,7 +71,7 @@ func (w *WikipediaScraperImpl) getSearchResultSet(query string, siteCode entity.
 
 			pageLink, ok := body.Find(".mw-search-result-heading a").Attr("href")
 			if !ok {
-				log.Println("failed to get URL for result", title)
+				sentry.CaptureException(fmt.Errorf("failed to get URL for result '%s'", title))
 				return
 			}
 
@@ -81,11 +79,9 @@ func (w *WikipediaScraperImpl) getSearchResultSet(query string, siteCode entity.
 
 			convertedLink, ok := w.convertLink(link)
 			if !ok {
-				log.Println("failed to convert URL for result", title)
+				sentry.CaptureException(fmt.Errorf("failed to convert URL for result '%s'", title))
 				return
 			}
-
-			log.Println(convertedLink, "->", title)
 
 			results = append(results, ScrapedResult{
 				Title: title,
@@ -107,7 +103,6 @@ func (w *WikipediaScraperImpl) getSearchResultSet(query string, siteCode entity.
 // Scrape will scrape google for the given query and
 // parse the results.
 func (w *WikipediaScraperImpl) Scrape(query string, siteCode entity.SiteCode) []ScrapedResult {
-	log.Println("Scraping wikipedia for", query)
 	convertedResults := w.getSearchResultSet(query, siteCode)
 	return convertedResults
 }

@@ -21,7 +21,7 @@ var cachedScraper = scrapecache.New()
 func ScrapeHandler(c *gin.Context) {
 	var req entity.ScrapeRequest
 	if err := c.BindJSON(&req); err != nil {
-		log.Println("bad request", err)
+		sentry.CaptureException(err)
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}

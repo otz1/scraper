@@ -2,7 +2,6 @@ package scraper
 
 import (
 	"github.com/otz1/scraper/entity"
-	"log"
 	"net/url"
 	"strings"
 )
@@ -32,14 +31,6 @@ func attrsToMap(attrs string) map[string]bool {
 		result[a] = true
 	}
 	return result
-}
-
-// FIXME dead code?
-func elHasClass(attribs string, class string) bool {
-	classes := attrsToMap(attribs)
-	log.Println("is", class, "inside of", classes)
-	_, ok := classes[class]
-	return ok
 }
 
 // Service is a service that scrapes

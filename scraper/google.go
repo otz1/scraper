@@ -47,8 +47,6 @@ func (g *GoogleScraperImpl) buildRequestURL(query string, siteCode entity.SiteCo
 }
 
 func (g *GoogleScraperImpl) getSearchResultSet(query string, siteCode entity.SiteCode) []*colly.HTMLElement {
-	log.Println("getSearchResultSet for", query)
-
 	c := colly.NewCollector()
 	var searchElements []*colly.HTMLElement
 	c.OnHTML("div", func(e *colly.HTMLElement) {
@@ -84,19 +82,13 @@ func (g *GoogleScraperImpl) convertResults(searchElements []*colly.HTMLElement) 
 			// trim the prefix
 			link = strings.TrimPrefix(link, "/url?q=")
 
-			titles := e.ChildTexts("h3")
-			title := "no title!"
-			if len(titles) > 0 {
-				title = titles[0]
-			}
+			// titles := e.ChildTexts("h3")
 
 			// ensure it's a proper link!
 			if _, err := url.Parse(link); err != nil {
-				log.Println("failed to parse url", err)
+				sentry.CaptureException(err)
 				return
 			}
-
-			log.Println(title, "->", link)
 
 			result := ScrapedResult{
 				Href: link,
@@ -111,7 +103,6 @@ func (g *GoogleScraperImpl) convertResults(searchElements []*colly.HTMLElement) 
 // Scrape will scrape google for the given query and
 // parse the results.
 func (g *GoogleScraperImpl) Scrape(query string, siteCode entity.SiteCode) []ScrapedResult {
-	log.Println("Scraping google for", query)
 	resultSet := g.getSearchResultSet(query, siteCode)
 	convertedResults := g.convertResults(resultSet)
 	return convertedResults
