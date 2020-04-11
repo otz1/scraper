@@ -1,10 +1,21 @@
 package scraper
 
 import (
+	"github.com/gocolly/colly"
 	"github.com/otz1/scraper/entity"
 	"net/url"
-	"strings"
 )
+
+type BasicScraper struct {
+	collector *colly.Collector
+}
+
+func NewBasicScraper(options ...colly.CollectorOption) BasicScraper {
+	options = append(options, colly.AllowURLRevisit())
+	return BasicScraper{
+		collector: colly.NewCollector(options...),
+	}
+}
 
 // ScrapedResult is a result that has been scraped from
 // one of the external sources.
@@ -23,14 +34,6 @@ func (sr ScrapedResult) ToResult() entity.Result {
 		Href:    sr.Href,
 		Snippet: sr.Snippet,
 	}
-}
-
-func attrsToMap(attrs string) map[string]bool {
-	result := map[string]bool{}
-	for _, a := range strings.Split(attrs, " ") {
-		result[a] = true
-	}
-	return result
 }
 
 // Service is a service that scrapes

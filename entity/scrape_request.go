@@ -7,9 +7,11 @@ type ScrapeSource string
 // The sources available to scrape
 // that are currently supported
 const (
-	GOOGLE    ScrapeSource = "GOOGLE"
 	DDG       ScrapeSource = "DDG"
-	WIKIPEDIA ScrapeSource = "WIKIPEDIA"
+	STARTPAGE              = "STARTPAGE"
+	YAHOO                  = "YAHOO"
+	BING                   = "BING"
+	WIKIPEDIA              = "WIKIPEDIA"
 )
 
 // ScrapeRequest ...

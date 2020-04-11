@@ -17,7 +17,7 @@ var subDomainMap = map[entity.SiteCode]string{
 	entity.OTZIT_US: "en",
 }
 
-func getSubdomain(siteCode entity.SiteCode) string {
+func (w *WikipediaScraperImpl) getSubdomain(siteCode entity.SiteCode) string {
 	subDomain, ok := subDomainMap[siteCode]
 	if !ok {
 		err := util.InvalidSiteCodeErr(siteCode)
@@ -29,15 +29,19 @@ func getSubdomain(siteCode entity.SiteCode) string {
 
 // WikipediaScraperImpl is an implementation a scraper
 // service that will scrape wikipedia
-type WikipediaScraperImpl struct{}
+type WikipediaScraperImpl struct {
+	BasicScraper
+}
 
 // NewWikipediaScraperService ...
 func NewWikipediaScraperService() *WikipediaScraperImpl {
-	return &WikipediaScraperImpl{}
+	return &WikipediaScraperImpl{
+		NewBasicScraper(),
+	}
 }
 
 func (w *WikipediaScraperImpl) getBaseLink(siteCode entity.SiteCode) string {
-	subdomain := getSubdomain(siteCode)
+	subdomain := w.getSubdomain(siteCode)
 	return fmt.Sprintf("https://%s.wikipedia.org", subdomain)
 }
 
@@ -60,11 +64,10 @@ func (w *WikipediaScraperImpl) convertLink(link string) (string, bool) {
 }
 
 func (w *WikipediaScraperImpl) getSearchResultSet(query string, siteCode entity.SiteCode) []ScrapedResult {
-	c := colly.NewCollector()
 	var results []ScrapedResult
 
 	// here we are scraping the container of all of the result boxes.
-	c.OnHTML("div .mw-search-results", func(e *colly.HTMLElement) {
+	w.collector.OnHTML("div .mw-search-results", func(e *colly.HTMLElement) {
 		e.DOM.Find(".mw-search-result").Each(func(_ int, body *goquery.Selection) {
 			title := body.Find(".mw-search-result-heading a").Text()
 			meta := body.Find(".searchresult").Text()
@@ -92,7 +95,7 @@ func (w *WikipediaScraperImpl) getSearchResultSet(query string, siteCode entity.
 	})
 
 	url := w.buildRequestURL(query, siteCode)
-	if err := c.Visit(url); err != nil {
+	if err := w.collector.Visit(url); err != nil {
 		sentry.CaptureException(err)
 		panic(err)
 	}

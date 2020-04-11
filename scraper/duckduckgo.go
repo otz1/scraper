@@ -17,7 +17,7 @@ var siteEnumMap = map[entity.SiteCode]string{
 	entity.OTZIT_UK: "co.uk",
 }
 
-func getTLD(siteCode entity.SiteCode) string {
+func (d *DuckDuckGoScraperImpl) getTLD(siteCode entity.SiteCode) string {
 	tld, ok := siteEnumMap[siteCode]
 	if !ok {
 		err := util.InvalidSiteCodeErr(siteCode)
@@ -29,15 +29,19 @@ func getTLD(siteCode entity.SiteCode) string {
 
 // DuckDuckGoScraperImpl is an implementation a scraper
 // service that will scrape duckduckgo
-type DuckDuckGoScraperImpl struct{}
+type DuckDuckGoScraperImpl struct {
+	BasicScraper
+}
 
 // NewDDGScraperService ...
 func NewDDGScraperService() *DuckDuckGoScraperImpl {
-	return &DuckDuckGoScraperImpl{}
+	return &DuckDuckGoScraperImpl{
+		NewBasicScraper(),
+	}
 }
 
 func (d *DuckDuckGoScraperImpl) buildRequestURL(query string, siteCode entity.SiteCode) string {
-	tld := getTLD(siteCode)
+	tld := d.getTLD(siteCode)
 	return fmt.Sprintf(`https://duckduckgo.%s/html/?q=%s`, tld, parseQuery(query))
 }
 
@@ -55,11 +59,10 @@ func (d *DuckDuckGoScraperImpl) convertLink(link string) (string, bool) {
 }
 
 func (d *DuckDuckGoScraperImpl) getSearchResultSet(query string, siteCode entity.SiteCode) []ScrapedResult {
-	c := colly.NewCollector()
 	var results []ScrapedResult
 
 	// here we are scraping the container of all of the result boxes.
-	c.OnHTML("div[id=links]", func(e *colly.HTMLElement) {
+	d.collector.OnHTML("div[id=links]", func(e *colly.HTMLElement) {
 		e.DOM.Find(".result").Each(func(_ int, s *goquery.Selection) {
 			body := s.Find(".result__body")
 			title := body.Find(".result__title a").Text()
@@ -86,7 +89,7 @@ func (d *DuckDuckGoScraperImpl) getSearchResultSet(query string, siteCode entity
 	})
 
 	url := d.buildRequestURL(query, siteCode)
-	if err := c.Visit(url); err != nil {
+	if err := d.collector.Visit(url); err != nil {
 		sentry.CaptureException(err)
 		panic(err)
 	}
