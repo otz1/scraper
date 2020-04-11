@@ -28,11 +28,13 @@ type ScrapedResult struct {
 	Href            string `json:"href"`
 }
 
-func (sr ScrapedResult) ToResult() entity.Result {
+// This should go in conv.
+func (sr ScrapedResult) ToResult(source entity.ScrapeSource) entity.Result {
 	return entity.Result{
 		Title:   sr.Title,
 		Href:    sr.Href,
 		Snippet: sr.Snippet,
+		Source:  source,
 	}
 }
 

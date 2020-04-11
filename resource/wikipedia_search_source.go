@@ -24,7 +24,7 @@ func (wsr *WikipediaSearchResource) Query(query string, siteCode entity.SiteCode
 
 	convertedResults := make([]entity.Result, len(scrapedResults))
 	for i, sr := range scrapedResults {
-		result := sr.ToResult()
+		result := sr.ToResult(entity.WIKIPEDIA)
 		convertedResults[i] = result
 	}
 

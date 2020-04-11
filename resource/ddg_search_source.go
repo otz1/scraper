@@ -25,7 +25,7 @@ func (ddg *DDGSearchResource) Query(query string, siteCode entity.SiteCode) enti
 	// TODO move to conv
 	convertedResults := make([]entity.Result, len(scrapedResults))
 	for i, sr := range scrapedResults {
-		result := sr.ToResult()
+		result := sr.ToResult(entity.DDG)
 		convertedResults[i] = result
 	}
 

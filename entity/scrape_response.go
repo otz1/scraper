@@ -1,9 +1,10 @@
 package entity
 
 type Result struct {
-	Title   string `json:"title"`
-	Href    string `json:"href"`
-	Snippet string `json:"snippet"`
+	Title   string       `json:"title"`
+	Href    string       `json:"href"`
+	Snippet string       `json:"snippet"`
+	Source  ScrapeSource `json:"source"`
 }
 
 type ScrapeResponse struct {
