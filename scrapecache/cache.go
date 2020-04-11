@@ -20,6 +20,8 @@ type ScrapeCache struct {
 	failures uint64
 }
 
+var sources = resource.ValidSearchResources()
+
 func hash(siteCode entity.SiteCode, selectedSource entity.ScrapeSource, query string) string {
 	return fmt.Sprintf("%s:%s:%s", string(siteCode), string(selectedSource), query)
 }
@@ -31,9 +33,7 @@ func (c *ScrapeCache) Query(siteCode entity.SiteCode, selectedSource entity.Scra
 	if err != nil {
 		c.misses++
 		sentry.CaptureException(err)
-	}
-
-	if err == nil {
+	} else {
 		// we've found it, let's unmarshal
 		var cachedResp entity.ScrapeResponse
 		err := jsoniter.Unmarshal(rawCachedResp, &cachedResp)
@@ -52,7 +52,6 @@ func (c *ScrapeCache) Query(siteCode entity.SiteCode, selectedSource entity.Scra
 	// 2. failed to unmarshal due to potential corruption
 	// so in this case we honour the scrape request.
 
-	sources := resource.ValidSearchResources()
 	scraperResource, ok := sources[selectedSource]
 	if !ok {
 		// TODO log as sentry error.
