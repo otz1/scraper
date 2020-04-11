@@ -22,12 +22,12 @@ type ScrapeCache struct {
 
 var sources = resource.ValidSearchResources()
 
-func hash(siteCode entity.SiteCode, selectedSource entity.ScrapeSource, query string) string {
-	return fmt.Sprintf("%s:%s:%s", string(siteCode), string(selectedSource), query)
+func hash(siteCode entity.SiteCode, query string) string {
+	return fmt.Sprintf("%s:%s", string(siteCode), query)
 }
 
-func (c *ScrapeCache) Query(siteCode entity.SiteCode, selectedSource entity.ScrapeSource, query string) entity.ScrapeResponse {
-	key := hash(siteCode, selectedSource, query)
+func (c *ScrapeCache) Query(siteCode entity.SiteCode, query string) entity.ScrapeResponse {
+	key := hash(siteCode, query)
 
 	rawCachedResp, err := c.store.Get(key)
 	if err != nil {
@@ -52,14 +52,7 @@ func (c *ScrapeCache) Query(siteCode entity.SiteCode, selectedSource entity.Scra
 	// 2. failed to unmarshal due to potential corruption
 	// so in this case we honour the scrape request.
 
-	scraperResource, ok := sources[selectedSource]
-	if !ok {
-		// TODO log as sentry error.
-		panic("bad source!")
-	}
-
-	// do the scrape on the given source.
-	resp := scraperResource.Query(query, siteCode)
+	resp := resource.ScrapeAvailableSources(query, siteCode)
 
 	// store in the cache
 	{
