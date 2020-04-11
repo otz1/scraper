@@ -13,10 +13,10 @@ import (
 // ScrapeCache is a shim over the scraping resources
 // which will cache the responses over a short period of time.
 type ScrapeCache struct {
-	store *bigcache.BigCache
-	caches uint64
-	hits uint64
-	misses uint64
+	store    *bigcache.BigCache
+	caches   uint64
+	hits     uint64
+	misses   uint64
 	failures uint64
 }
 
@@ -74,14 +74,13 @@ func (c *ScrapeCache) Query(siteCode entity.SiteCode, selectedSource entity.Scra
 	return resp
 }
 
-
 func New() *ScrapeCache {
 	store, _ := bigcache.NewBigCache(bigcache.DefaultConfig(5 * time.Minute))
 	return &ScrapeCache{
-		store: store,
-		caches: 0,
-		misses: 0,
+		store:    store,
+		caches:   0,
+		misses:   0,
 		failures: 0,
-		hits: 0,
+		hits:     0,
 	}
 }

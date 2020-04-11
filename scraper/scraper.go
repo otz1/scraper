@@ -19,8 +19,8 @@ type ScrapedResult struct {
 
 func (sr ScrapedResult) ToResult() entity.Result {
 	return entity.Result{
-		Title: sr.Title,
-		Href: sr.Href,
+		Title:   sr.Title,
+		Href:    sr.Href,
 		Snippet: sr.Snippet,
 	}
 }

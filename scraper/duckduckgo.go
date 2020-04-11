@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-var siteEnumMap = map[entity.SiteCode]string {
+var siteEnumMap = map[entity.SiteCode]string{
 	entity.OTZIT_US: "com",
 	entity.OTZIT_UK: "co.uk",
 }
@@ -78,8 +78,8 @@ func (d *DuckDuckGoScraperImpl) getSearchResultSet(query string, siteCode entity
 			}
 
 			results = append(results, ScrapedResult{
-				Title: title,
-				Href: convertedLink,
+				Title:   title,
+				Href:    convertedLink,
 				Snippet: snippet,
 			})
 		})

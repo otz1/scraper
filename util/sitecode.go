@@ -5,7 +5,7 @@ import (
 	"github.com/otz1/scraper/entity"
 )
 
-var siteCodeMap = map[string]entity.SiteCode {
+var siteCodeMap = map[string]entity.SiteCode{
 	"OTZIT_UK": entity.OTZIT_UK,
 	"OTZIT_US": entity.OTZIT_US,
 	"OTZIT_FR": entity.OTZIT_FR,
@@ -13,7 +13,7 @@ var siteCodeMap = map[string]entity.SiteCode {
 	"OTZIT_ES": entity.OTZIT_ES,
 }
 
-func GetSiteCode(siteCodeHeader string) (entity.SiteCode) {
+func GetSiteCode(siteCodeHeader string) entity.SiteCode {
 	siteCode, ok := siteCodeMap[siteCodeHeader]
 	if !ok {
 		err := InvalidSiteCodeHeaderErr(siteCodeHeader)

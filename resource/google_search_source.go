@@ -30,6 +30,6 @@ func (gss *GoogleSearchResource) Query(query string, siteCode entity.SiteCode) e
 
 	return entity.ScrapeResponse{
 		OriginalQuery: query,
-		Results: convertedResults,
+		Results:       convertedResults,
 	}
 }

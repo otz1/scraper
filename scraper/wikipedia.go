@@ -84,8 +84,8 @@ func (w *WikipediaScraperImpl) getSearchResultSet(query string, siteCode entity.
 			}
 
 			results = append(results, ScrapedResult{
-				Title: title,
-				Href: convertedLink,
+				Title:   title,
+				Href:    convertedLink,
 				Snippet: meta,
 			})
 		})

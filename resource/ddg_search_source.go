@@ -7,29 +7,30 @@ import (
 
 // DDGSearchResource implements the scraping for
 // duckduckgo as a source of information
-type DDGSearchResource struct{}
+type DDGSearchResource struct {
+	scraperService *scraper.DuckDuckGoScraperImpl
+}
 
 // NewGoogleSearchResource ...
 func NewDDGSearchResource() *DDGSearchResource {
-	return &DDGSearchResource{}
+	return &DDGSearchResource{
+		scraperService: scraper.NewDDGScraperService(),
+	}
 }
 
 // Query ...
 func (ddg *DDGSearchResource) Query(query string, siteCode entity.SiteCode) entity.ScrapeResponse {
-	ddgscraper := scraper.NewDDGScraperService()
-	scrapedResults := ddgscraper.Scrape(query, siteCode)
+	scrapedResults := ddg.scraperService.Scrape(query, siteCode)
 
-	convertedResults := func() []entity.Result {
-		var results []entity.Result
-		for _, sr := range scrapedResults {
-			result := sr.ToResult()
-			results = append(results, result)
-		}
-		return results
-	}()
+	// TODO move to conv
+	convertedResults := make([]entity.Result, len(scrapedResults))
+	for i, sr := range scrapedResults {
+		result := sr.ToResult()
+		convertedResults[i] = result
+	}
 
 	return entity.ScrapeResponse{
 		OriginalQuery: query,
-		Results: convertedResults,
+		Results:       convertedResults,
 	}
 }
