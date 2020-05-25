@@ -1,13 +1,14 @@
 package main
 
 import (
-	"github.com/getsentry/sentry-go"
-	"github.com/otz1/scraper/scrapecache"
-	"github.com/otz1/scraper/util"
 	"log"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/getsentry/sentry-go"
+	"github.com/otz1/scraper/scrapecache"
+	"github.com/otz1/scraper/util"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -18,7 +19,6 @@ import (
 // in the future we could just cache results. for now this works.
 var cachedScraper = scrapecache.New()
 
-// TODO move this somewhere else.
 func ScrapeHandler(c *gin.Context) {
 	var req entity.ScrapeRequest
 	if err := c.BindJSON(&req); err != nil {
